@@ -1,5 +1,5 @@
 {
-  "build": 20260417,
+  "build": 20260418,
   "download_url": "https://raw.githubusercontent.com/quantass/qnap-auth-helper/refs/heads/main/sendtoqnap_addon.zip",
   "host_url": "https://raw.githubusercontent.com/quantass/qnap-auth-helper/refs/heads/main/addon_hosts.json",
   "changelog": "Added file-eu-par-#.gofile.io"
