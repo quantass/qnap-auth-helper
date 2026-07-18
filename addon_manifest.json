@@ -2,5 +2,5 @@
   "build": 20260718,
   "download_url": "https://raw.githubusercontent.com/quantass/qnap-auth-helper/refs/heads/main/sendtoqnap_addon.zip",
   "host_url": "https://raw.githubusercontent.com/quantass/qnap-auth-helper/refs/heads/main/addon_hosts.json",
-  "changelog": "Removed store-na-phx-4.gofile.io"
+  "changelog": "Added file-na-chi-1.gofile.io"
 }
