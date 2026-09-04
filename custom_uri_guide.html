@@ -629,11 +629,35 @@
         <div class="step-body">
           <span class="step-tag" style="--step-color:var(--green);--step-bg:var(--green-bg)">Test</span>
           <h3>Try it out</h3>
-          <p class="tight">Paste this into the address bar (or click it if it's a hyperlink on a web page):</p>
+          <p class="tight">Paste this into the address bar (or click the copy button to copy it):</p>
 
-          <div class="test-link os-specific os-windows is-visible"><span class="dyn-proto">openfolder</span>:C:\Users\Name\Downloads</div>
-          <div class="test-link os-specific os-linux"><span class="dyn-proto">openfolder</span>:/home/user/Downloads</div>
-          <div class="test-link os-specific os-macos"><span class="dyn-proto">openfolder</span>:/Users/username/Downloads</div>
+          <div class="file-panel os-specific os-windows is-visible" style="margin-top: 6px;">
+            <div class="file-panel-head">
+              <div class="file-panel-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l6-6-6-6M12 19h8"/></svg> Address Bar Link</div>
+              <div class="file-panel-actions"><button class="fp-btn" onclick="copyCode('test-win', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button></div>
+            </div>
+            <pre><code id="test-win"><span class="dyn-proto">openfolder</span>:C:\Windows</code></pre>
+          </div>
+
+          <div class="file-panel os-specific os-linux" style="margin-top: 6px;">
+            <div class="file-panel-head">
+              <div class="file-panel-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l6-6-6-6M12 19h8"/></svg> Address Bar Link</div>
+              <div class="file-panel-actions"><button class="fp-btn" onclick="copyCode('test-lin', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button></div>
+            </div>
+            <pre><code id="test-lin"><span class="dyn-proto">openfolder</span>:/tmp</code></pre>
+          </div>
+
+          <div class="file-panel os-specific os-macos" style="margin-top: 6px;">
+            <div class="file-panel-head">
+              <div class="file-panel-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l6-6-6-6M12 19h8"/></svg> Address Bar Link</div>
+              <div class="file-panel-actions"><button class="fp-btn" onclick="copyCode('test-mac', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button></div>
+            </div>
+            <pre><code id="test-mac"><span class="dyn-proto">openfolder</span>:/Applications</code></pre>
+          </div>
+
+          <p style="margin-top:14px; font-size:13.5px; color:var(--text-dim);">
+            <strong>Note:</strong> You can modify this default test link by changing all the text after the colon (<code>:</code>) to any absolute folder or file path that exists on your operating system.
+          </p>
 
           <p style="margin-top:14px; font-size:13.5px;">
             Firefox will show a one-time "Launch Application" prompt. Check <strong>Always allow</strong> or <strong>Remember my choice</strong> and confirm. Your OS should immediately pop open that folder!
