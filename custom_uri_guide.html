@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Custom Local Link Protocol (Files & Folders)</title>
+<title>Custom URI Protocol for Local Files & Folders</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -56,13 +56,15 @@
   a { color: inherit; }
   code, pre { font-family: var(--font-mono); }
 
-  h1, h2, h3 {
-    font-family: var(--font-display);
-    font-weight: 600;
-    line-height: 1.2;
-    margin: 0;
-    letter-spacing: -0.01em;
-  }
+   h1, h2, h3 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	line-height: 1.2;
+	margin: 0;
+	letter-spacing: -0.01em;
+	font-size: 35px;
+	margin-bottom: 30px;
+}
 
   .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 
@@ -357,10 +359,13 @@
 
   <section class="hero" style="border-top:none;padding-top:40px;">
     <div class="hero-eyebrow"><span class="dot" id="OsStatusDot"></span> <span id="OsStatusText">Windows</span> &nbsp;·&nbsp; Firefox desktop</div>
-    <h1>Open Network & Local Paths Directly in Firefox</h1>
+    <h2>Create a Custom URI Protocol for Opening<br>Local and Network Paths from Firefox</h2>
+    <p></p>
     <p class="lede">
-      Normally, clicking a link to a local or network path does nothing because of browser security blocks. 
-      This guide wires up a custom protocol (like <code>openfolder:</code>) to safely bypass that block, handing the link directly to your operating system.
+Normally, clicking a link to a local or network path within Firefox does nothing because browsers block these types of links for security reasons. This guide shows you how to configure a custom URI protocol, such as `openfolder:`, that safely bridges this gap by passing the link directly to your operating system for handling. <br><br>
+Once the Custom URI Handler is configured, selecting completed downloads within <a target="_blank" href="https://addons.mozilla.org/en-US/firefox/addon/sendtoqnapplus/">Send TO QNAP++</a> can directly open the file or folder using its associated application, such as launching VLC to play downloaded movies.
+
+
     </p>
 
     <div class="callout" style="--callout-color:var(--warn);--callout-bg:var(--gold-bg); margin: 0 auto 32px; max-width: 65ch; text-align: left;">
