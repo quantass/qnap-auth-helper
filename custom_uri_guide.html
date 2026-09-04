@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Local Link Protocol (Files & Folders)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0E14;
+    --panel: #121722;
+    --panel-2: #171D2B;
+    --border: #232A3B;
+    --border-soft: #1B2130;
+    --text: #E8EAF0;
+    --text-dim: #94A0B4;
+    --text-faint: #5B6478;
+
+    --blue: #38bdf8;
+    --blue-bg: rgba(56, 189, 248, 0.10);
+    --gold: #facc15;
+    --gold-bg: rgba(250, 204, 21, 0.10);
+    --cyan: #a855f7;
+    --cyan-bg: rgba(168, 85, 247, 0.10);
+    --green: #4ade80;
+    --green-bg: rgba(74, 222, 128, 0.10);
+    --red: #f87171;
+    --red-bg: rgba(248, 113, 113, 0.10);
+
+    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', Consolas, monospace;
+
+    --radius: 10px;
+    --maxw: 840px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(56, 189, 248, 0.07), transparent 60%),
+      radial-gradient(900px 500px at 100% 10%, rgba(74, 222, 128, 0.05), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: rgba(56, 189, 248, 0.35); color: #fff; }
+
+  a { color: inherit; }
+  code, pre { font-family: var(--font-mono); }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  header.topnav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(11, 14, 20, 0.82);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .topnav-inner {
+    max-width: var(--maxw); margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+  .brand-mark { width: 26px; height: 26px; flex: none; }
+  
+  .hero { padding: 50px 0 40px; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-dim);
+    margin-bottom: 18px;
+  }
+  .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px var(--green-bg); }
+  .hero h1 { font-size: clamp(32px, 4vw, 42px); max-width: 25ch; margin-bottom: 18px; }
+  .hero p.lede { font-size: 16.5px; color: var(--text-dim); max-width: 65ch; margin-bottom: 8px; }
+
+  /* Configuration Panel */
+  .config-panel {
+    background: var(--panel-2);
+    border: 1px solid var(--blue);
+    border-radius: 9px;
+    padding: 24px;
+    margin-top: 35px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 20px var(--blue-bg);
+  }
+  .config-panel-title {
+    width: 100%;
+    margin-bottom: 5px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .config-panel-title svg { color: var(--blue); width: 20px; height: 20px; }
+  .config-item { flex: 1; min-width: 250px; }
+  .config-item label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+  .config-item input {
+    width: 100%;
+    background: #0B0E14;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    transition: border-color 0.2s;
+  }
+  .config-item input:focus { outline: none; border-color: var(--blue); }
+  .config-info { width: 100%; font-size: 13px; color: var(--text-faint); margin-top: 5px; }
+
+  .flow {
+    margin-top: 40px;
+    display: flex; align-items: stretch; gap: 0;
+    flex-wrap: wrap;
+  }
+  .flow-node {
+    flex: 1 1 150px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--node-color, var(--blue));
+    border-radius: 8px;
+    padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-width: 140px;
+  }
+  .flow-node .fn-icon { width: 26px; height: 26px; color: var(--node-color, var(--blue)); }
+  .flow-node .fn-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--node-color, var(--blue)); font-weight: 600; }
+  .flow-node .fn-text { font-size: 13.5px; color: var(--text); line-height: 1.45; }
+  .flow-arrow { flex: 0 0 34px; display: flex; align-items: center; justify-content: center; color: var(--text-faint); }
+  .flow-arrow svg { width: 20px; height: 20px; }
+  @media (max-width: 660px) {
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); align-self: center; padding: 2px 0; }
+  }
+
+  section { padding: 56px 0; border-top: 1px solid var(--border-soft); }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 24px; }
+  .section-sub { color: var(--text-dim); font-size: 15px; margin: -16px 0 28px; max-width: 60ch; }
+
+  .steps { position: relative; }
+  .step { display: grid; grid-template-columns: 44px 1fr; gap: 20px; position: relative; padding-bottom: 44px; }
+  .step:last-child { padding-bottom: 0; }
+  .step-rail { position: relative; display: flex; justify-content: center; }
+  .step-rail::before {
+    content: ""; position: absolute; top: 44px; bottom: -44px; left: 50%;
+    width: 1px; background: var(--border); transform: translateX(-50%);
+  }
+  .step:last-child .step-rail::before { display: none; }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--step-color, var(--blue));
+    color: var(--step-color, var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    flex: none; z-index: 1;
+  }
+  .step-body h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+  .step-body .step-tag {
+    display: inline-block; font-size: 11.5px; font-weight: 600;
+    color: var(--step-color, var(--blue));
+    background: var(--step-bg, var(--blue-bg));
+    padding: 2px 8px; border-radius: 20px; margin-bottom: 10px;
+  }
+  .step-body p { color: var(--text-dim); font-size: 14.5px; max-width: 65ch; }
+  .step-body p.tight { margin-top: 0; }
+
+  .file-panel { margin-top: 16px; background: #0D1119; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+  .file-panel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .file-panel-name { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); }
+  .file-panel-name svg { width: 15px; height: 15px; color: var(--text-faint); }
+  .file-panel-actions { display: flex; gap: 8px; }
+  .fp-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: transparent;
+    border: 1px solid var(--border); color: var(--text-dim);
+    font-family: var(--font-body); font-size: 12.5px; font-weight: 500;
+    padding: 6px 10px; border-radius: 6px; cursor: pointer; text-decoration: none;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .fp-btn svg { width: 13px; height: 13px; flex: none; }
+  .fp-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .fp-btn.copied { border-color: var(--green); color: var(--green); }
+  .file-panel pre { margin: 0; padding: 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; color: #38bdf8; }
+
+  .pref-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #0D1119; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; margin-top: 10px; font-family: var(--font-mono); font-size: 13px;
+  }
+  .pref-row .k { color: var(--text); }
+  .pref-row .eq { color: var(--text-faint); }
+  .pref-row .v { color: var(--green); }
+  .pref-row .tag { margin-left: auto; font-family: var(--font-body); font-size: 11px; color: var(--text-faint); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; }
+
+  .callout {
+    display: flex; gap: 12px; background: var(--callout-bg, var(--red-bg));
+    border: 1px solid var(--callout-color, var(--red)); border-radius: 9px;
+    padding: 14px 16px; margin-top: 16px;
+  }
+  .callout svg { width: 18px; height: 18px; flex: none; color: var(--callout-color, var(--red)); margin-top: 1px; }
+  .callout p { margin: 0; font-size: 13.5px; color: var(--text); line-height: 1.55; }
+  .callout p strong { color: var(--callout-color, var(--red)); }
+
+  .test-link {
+    display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 14px;
+    background: #0D1119; border: 1px solid var(--border); padding: 10px 14px; border-radius: 7px; color: var(--green); margin-top: 6px;
+  }
+
+  .tshoot { display: flex; flex-direction: column; gap: 10px; }
+  .tshoot-item {
+    display: grid; grid-template-columns: 22px 1fr; gap: 12px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+  }
+  .tshoot-item svg { width: 18px; height: 18px; color: var(--gold); margin-top: 2px; }
+  .tshoot-item h4 { margin: 0 0 4px; font-size: 14px; color: var(--text); font-family: var(--font-body); font-weight: 600; }
+  .tshoot-item p { margin: 0; font-size: 13.5px; color: var(--text-dim); }
+
+  footer { padding: 40px 0 60px; border-top: 1px solid var(--border-soft); text-align: center; color: var(--text-faint); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="topnav-inner">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-11Z" stroke="var(--blue)"/>
+      </svg>
+      <span>Custom Protocol Setup</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero" style="border-top:none;padding-top:40px;">
+    <div class="hero-eyebrow"><span class="dot"></span> Windows 11 &nbsp;·&nbsp; Firefox desktop</div>
+    <h1>Directly link your files & folders in Firefox.</h1>
+    <p class="lede">
+      Normally, clicking a link to a local or network path does nothing because of browser security blocks. 
+      This guide wires up a custom protocol (like <code>openfolder://</code>) to safely bypass that block, handing the link directly to Windows Explorer. <strong>This opens standard folders, but it also automatically launches safe files (like <code>.mp4</code> or <code>.pdf</code>) in their default Windows apps!</strong>
+    </p>
+
+    <!-- Interactive Configuration Panel -->
+    <div class="config-panel">
+      <div class="config-panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M5 5l1.5 1.5"></path><path d="M17.5 17.5L19 19"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M5 19l1.5-1.5"></path><path d="M17.5 6.5L19 5"></path></svg>
+        Customize Your Setup
+      </div>
+      <div class="config-item">
+        <label for="inp-proto">Your Protocol Name</label>
+        <input type="text" id="inp-proto" value="openfolder">
+        <div class="config-info">e.g., <code>openfolder</code>, <code>myfiles</code>, <code>browse</code></div>
+      </div>
+      <div class="config-item">
+        <label for="inp-path">Script Save Location</label>
+        <input type="text" id="inp-path" value="C:\Scripts">
+        <div class="config-info">The folder where you will save the script below.</div>
+      </div>
+    </div>
+    <!-- End Config Panel -->
+
+    <div class="flow">
+      <div class="flow-node" style="--node-color:var(--blue)">
+        <svg class="fn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.2 2.2 3.3 5 3.3 8s-1.1 5.8-3.3 8c-2.2-2.2-3.3-5-3.3-8S9.8 6.2 12 4Z"/></svg>
+        <div class="fn-label">1. Firefox</div>
+        <div class="fn-text">You click a <code class="dyn-proto">openfolder</code>: link on a web page.</div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="flow-node" style="--node-color:var(--gold)">
+        <svg class="fn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
+        <div class="fn-label">2. Registry</div>
+        <div class="fn-text">Windows recognizes the name and points to your script.</div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="flow-node" style="--node-color:var(--cyan)">
+        <svg class="fn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9l3 3-3 3M13 15h3"/></svg>
+        <div class="fn-label">3. Script</div>
+        <div class="fn-text">The helper script cleans the path and blocks dangerous files.</div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg></div>
+      <div class="flow-node" style="--node-color:var(--green)">
+        <svg class="fn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z"/></svg>
+        <div class="fn-label">4. Explorer</div>
+        <div class="fn-text">The file or folder instantly opens on your screen.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="section-head"><h2>Setup Steps</h2></div>
+    <p class="section-sub" style="margin-top:-20px;">The code blocks and downloads below update automatically based on your choices in the configuration panel above!</p>
+
+    <div class="steps">
+      <!-- Step 1 -->
+      <div class="step">
+        <div class="step-rail"><div class="step-num" style="--step-color:var(--cyan)">1</div></div>
+        <div class="step-body">
+          <span class="step-tag" style="--step-color:var(--cyan);--step-bg:var(--cyan-bg)">Script</span>
+          <h3>Save the helper script</h3>
+          <p class="tight">This script receives the link from Firefox, cleans up the text, and safely passes it to Windows. Ensure the folder <code><span class="dyn-path">C:\Scripts</span></code> exists on your computer, and save the code below as <code><span class="dyn-proto">openfolder</span>.vbs</code>.</p>
+
+          <div class="file-panel">
+            <div class="file-panel-head">
+              <div class="file-panel-name">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9l3 3-3 3M13 15h3"/></svg>
+                <span id="filename-vbs">openfolder.vbs</span>
+              </div>
+              <div class="file-panel-actions">
+                <button class="fp-btn" onclick="copyCode('code-vbs', this)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg>
+                  <span>Copy</span>
+                </button>
+                <a class="fp-btn" id="dl-vbs" download="openfolder.vbs" href="#">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg>
+                  <span>Download</span>
+                </a>
+              </div>
+            </div>
+            <pre><code id="code-vbs"></code></pre>
+          </div>
+          
+          <div class="callout" style="--callout-color:var(--red);--callout-bg:var(--red-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>
+            <p><strong>Security Warning:</strong> Do not remove the blocklist in the code! Because the script passes the path to Windows, malicious links could trick your computer into silently running an <code>.exe</code> or <code>.bat</code> file instead of just opening a folder or video. The blocklist protects you.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step">
+        <div class="step-rail"><div class="step-num" style="--step-color:var(--gold)">2</div></div>
+        <div class="step-body">
+          <span class="step-tag" style="--step-color:var(--gold);--step-bg:var(--gold-bg)">Registry</span>
+          <h3>Tell Windows about your protocol</h3>
+          <p class="tight">Windows needs to know what to do when it sees your custom protocol link. Create a text file named <code><span class="dyn-proto">openfolder</span>.reg</code>, paste the code below into it, and <strong>double-click the file to merge it into Windows</strong>.</p>
+
+          <div class="file-panel">
+            <div class="file-panel-head">
+              <div class="file-panel-name">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
+                <span id="filename-reg">openfolder.reg</span>
+              </div>
+              <div class="file-panel-actions">
+                <button class="fp-btn" onclick="copyCode('code-reg', this)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg>
+                  <span>Copy</span>
+                </button>
+                <a class="fp-btn" id="dl-reg" download="openfolder.reg" href="#">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg>
+                  <span>Download</span>
+                </a>
+              </div>
+            </div>
+            <pre><code id="code-reg"></code></pre>
+          </div>
+          <p style="margin-top:14px; font-size:13.5px;">
+            <strong>Note:</strong> We are using <code>HKEY_CURRENT_USER</code> here, which means you <strong>do not</strong> need Administrator rights to run this file! It will apply to your Windows account instantly.
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 3 (Swapped with old Step 4) -->
+      <div class="step">
+        <div class="step-rail"><div class="step-num" style="--step-color:var(--green)">3</div></div>
+        <div class="step-body">
+          <span class="step-tag" style="--step-color:var(--green);--step-bg:var(--green-bg)">Test</span>
+          <h3>Try it out</h3>
+          <p class="tight">Paste this into the address bar (or click it if it's a hyperlink on a web page):</p>
+
+          <div class="test-link"><span class="dyn-proto">openfolder</span>:\\192.168.1.2\Downloads</div>
+
+          <p style="margin-top:14px; font-size:13.5px;">
+            Firefox will show a one-time "Launch Application" prompt. Check <strong>Always allow</strong> or <strong>Remember my choice</strong> and confirm. File Explorer should immediately pop open to that folder!
+          </p>
+
+          <div class="callout" style="--callout-color:var(--blue);--callout-bg:var(--blue-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <p><strong>Restart Not Required:</strong> Windows registers protocols instantly. You usually do not need to restart Firefox, but if the browser acts stubborn on the first try, a quick browser restart will fix it.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 (Swapped with old Step 3) -->
+      <div class="step">
+        <div class="step-rail"><div class="step-num" style="--step-color:var(--text-faint)">4</div></div>
+        <div class="step-body">
+          <span class="step-tag" style="--step-color:var(--text-faint);--step-bg:rgba(91,100,120,0.15)">Optional (about:config)</span>
+          <h3>Force Firefox to allow it</h3>
+          
+          <p class="tight"><strong>Most users can completely skip this step.</strong> The standard popup in Step 3 is enough. But if Firefox refuses to pass the link and says "unknown protocol", you can force it:</p>
+
+          <ol style="margin-top:14px; font-size:14.5px; color:var(--text-dim); padding-left:20px; line-height: 1.7;">
+            <li>Type <code>about:config</code> into your Firefox address bar and accept the risk warning.</li>
+            <li>Paste <code style="color:var(--green)">network.protocol-handler.expose.<span class="dyn-proto">openfolder</span></code> into the search bar.</li>
+            <li>If it does not exist, look below the search bar: select <strong>Boolean</strong> and click the <strong>+ (Add)</strong> button.</li>
+            <li>Set the value to <strong>false</strong>.</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="troubleshooting">
+    <div class="section-head"><h2>Troubleshooting</h2></div>
+    <div class="tshoot">
+      <div class="tshoot-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div>
+          <h4>Nothing happens when I click the link</h4>
+          <p>Check the <code><span class="dyn-proto">openfolder</span>.reg</code> file you ran in Step 2. The script path inside the registry file MUST match the exact folder where you saved the VBS script in Step 1 (currently set to <code><span class="dyn-path">C:\Scripts</span></code>). Don't forget the double slashes <code>\\</code> in the `.reg` code!</p>
+        </div>
+      </div>
+      <div class="tshoot-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div>
+          <h4>Firefox says "unknown protocol" or remains silent after Step 4</h4>
+          <p>Double-check the <code>about:config</code> value from Step 4. Ensure you typed the name exactly (<code>network.protocol-handler.expose.<span class="dyn-proto">openfolder</span></code>), selected Boolean, and set the value to <code>false</code>. <strong>You may need to completely close and restart Firefox for the new setting to take effect.</strong></p>
+        </div>
+      </div>
+      <div class="tshoot-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div>
+          <h4>File Explorer opens to "My Documents" instead of the target</h4>
+          <p>This means Windows Explorer couldn't find the exact network or folder path you clicked. Our VBScript automatically creates a log file! Go to <code><span class="dyn-path">C:\Scripts</span></code> and open <code>launch_<span class="dyn-proto">openfolder</span>.log</code> to see the exact text path Windows tried to open. This usually reveals a typo in your link.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built for Windows 11 &amp; Firefox Desktop. (Uses Windows Explorer.exe, so this is for PC only).</p>
+  </footer>
+
+</main>
+
+<script>
+  // Dynamic Generation Functions
+  function generateVBS(proto) {
+    return `' ==============================================================================
+' ${proto} Protocol Handler Script
+' Receives a URL like ${proto}:\\\\server\\share\\folder or ${proto}:C:\\path\\to\\file.mp4
+' and safely opens it in Windows File Explorer or its default Windows application.
+' ==============================================================================
+
+' Ensure the script received an argument (the URL passed by Firefox)
+Set args = WScript.Arguments
+If args.Count = 0 Then WScript.Quit
+
+url = args.Item(0)
+
+' ------------------------------------------------------------------------------
+' 1. Logging Setup
+' Creates a log file in the same folder as this script to help troubleshoot issues.
+' ------------------------------------------------------------------------------
+Set fso = CreateObject("Scripting.FileSystemObject")
+scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
+logFilePath = scriptDir & "\\launch_${proto}.log"
+
+Sub LogEvent(status, message)
+    On Error Resume Next
+    Dim logFile
+    Set logFile = fso.OpenTextFile(logFilePath, 8, True)
+    logFile.WriteLine Now & " | [" & status & "] " & message
+    logFile.Close
+    On Error GoTo 0
+End Sub
+
+LogEvent "RECEIVED", "Raw incoming URL: " & url
+
+' ------------------------------------------------------------------------------
+' 2. Path Extraction
+' Removes the "${proto}:" prefix so we are left with just the file/folder path.
+' ------------------------------------------------------------------------------
+pos = InStr(url, ":")
+If pos > 0 Then
+    path = Mid(url, pos + 1)
+Else
+    path = url
+End If
+
+' ------------------------------------------------------------------------------
+' 3. URL & HTML Decoding
+' Firefox translates spaces into "%20" or sometimes HTML entities. 
+' These functions reverse that so Windows gets standard folder/file names.
+' ------------------------------------------------------------------------------
+Function UrlDecode(str)
+    Dim i, ch
+    i = 1
+    Do While i <= Len(str)
+        ch = Mid(str, i, 1)
+        If ch = "%" And i + 2 <= Len(str) Then
+            UrlDecode = UrlDecode & Chr(CLng("&H" & Mid(str, i + 1, 2)))
+            i = i + 3
+        Else
+            UrlDecode = UrlDecode & ch
+            i = i + 1
+        End If
+    Loop
+End Function
+
+Function HtmlDecode(str)
+    Dim objHTML
+    Set objHTML = CreateObject("htmlfile")
+    objHTML.Open
+    objHTML.Write "<body><textarea id='decodeBox'>" & str & "</textarea></body>"
+    objHTML.Close
+    HtmlDecode = objHTML.getElementById("decodeBox").value
+    Set objHTML = Nothing
+End Function
+
+path = UrlDecode(path)
+path = HtmlDecode(path)
+
+' Strip surrounding quotes (in case the browser wrapped the path in quotes)
+Do While (Left(path, 1) = Chr(34) Or Left(path, 1) = "'")
+    path = Mid(path, 2)
+Loop
+Do While (Right(path, 1) = Chr(34) Or Right(path, 1) = "'")
+    path = Left(path, Len(path) - 1)
+Loop
+
+LogEvent "DECODED", "Final target path: " & path
+
+' ------------------------------------------------------------------------------
+' 4. Security Blocklist (CRITICAL)
+' Prevents malicious websites from auto-launching dangerous executable files.
+' Safe files (like .mp4, .pdf, .jpg) or folders will pass this check.
+' ------------------------------------------------------------------------------
+Dim ext
+ext = LCase(fso.GetExtensionName(path))
+
+Select Case ext
+    Case "exe", "scr", "reg", "com", "pif", "cpl", "msc", "bat", "cmd", "vbs", "vbe", "ps1", "hta", "js", "jse", "lnk", "inf", "wsf", "msi", "msp"
+        LogEvent "BLOCKED", "Execution prevented for dangerous extension (." & ext & ")"
+        WScript.Quit
+End Select
+
+' ------------------------------------------------------------------------------
+' 5. Explorer Handoff
+' Passes the clean, verified path directly to Windows Explorer.
+' Folders will open; files will launch in their default registered Windows app.
+' ------------------------------------------------------------------------------
+Set shell = CreateObject("WScript.Shell")
+On Error Resume Next
+errCode = shell.Run("explorer.exe """ & path & """", 1, False)
+
+If Err.Number <> 0 Or errCode <> 0 Then
+    LogEvent "FAILED", "Could not launch explorer.exe. Error Number: " & Err.Number
+Else
+    LogEvent "SUCCEEDED", "Successfully passed path to explorer.exe"
+End If
+On Error GoTo 0`;
+  }
+
+  function generateReg(proto, dir) {
+    // Sanitize directory for Windows Registry (strip trailing slashes, ensure double slashes)
+    let safeDir = dir.replace(/\\+$/, '');
+    let doubleSlashDir = safeDir.replace(/\\/g, '\\\\');
+    let fullDoubleSlashPath = doubleSlashDir + '\\\\' + proto + '.vbs';
+
+    return `Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\\Software\\Classes\\${proto}]
+@="URL:Custom ${proto} Protocol"
+"URL Protocol"=""
+
+[HKEY_CURRENT_USER\\Software\\Classes\\${proto}\\shell]
+[HKEY_CURRENT_USER\\Software\\Classes\\${proto}\\shell\\open]
+[HKEY_CURRENT_USER\\Software\\Classes\\${proto}\\shell\\open\\command]
+@="wscript.exe \\"${fullDoubleSlashPath}\\" \\"%1\\""`;
+  }
+
+  // Event Listeners for Config Panel
+  const inpProto = document.getElementById('inp-proto');
+  const inpPath = document.getElementById('inp-path');
+
+  function sanitizeInput(str, fallback) {
+    let clean = str.trim().replace(/[^a-zA-Z0-9_\-\:\\]/g, '');
+    return clean.length > 0 ? clean : fallback;
+  }
+
+  function updateAll() {
+    // Sanitize to prevent HTML breaks or weird registry bugs
+    const protoRaw = inpProto.value.trim().replace(/[^a-zA-Z0-9_]/g, '');
+    const proto = protoRaw.length > 0 ? protoRaw : 'openfolder';
+    
+    let dir = inpPath.value.trim();
+    if(dir.length === 0) dir = 'C:\\Scripts';
+    // Clean trailing slash for UI display consistency
+    const displayDir = dir.replace(/\\+$/, '');
+
+    // 1. Update Inline Text Spans
+    document.querySelectorAll('.dyn-proto').forEach(el => el.textContent = proto);
+    document.querySelectorAll('.dyn-path').forEach(el => el.textContent = displayDir);
+
+    // 2. Update Filenames
+    document.getElementById('filename-vbs').textContent = proto + '.vbs';
+    document.getElementById('filename-reg').textContent = proto + '.reg';
+    document.getElementById('dl-vbs').setAttribute('download', proto + '.vbs');
+    document.getElementById('dl-reg').setAttribute('download', proto + '.reg');
+
+    // 3. Generate Code Blocks
+    const vbsCode = generateVBS(proto);
+    const regCode = generateReg(proto, displayDir);
+    
+    document.getElementById('code-vbs').textContent = vbsCode;
+    document.getElementById('code-reg').textContent = regCode;
+
+    // 4. Update Download Blobs dynamically
+    const vbsBlob = new Blob([vbsCode], { type: 'text/vbscript' });
+    document.getElementById('dl-vbs').href = URL.createObjectURL(vbsBlob);
+
+    const regBlob = new Blob([regCode], { type: 'text/plain' });
+    document.getElementById('dl-reg').href = URL.createObjectURL(regBlob);
+  }
+
+  // Bind input events for live updates
+  inpProto.addEventListener('input', updateAll);
+  inpPath.addEventListener('input', updateAll);
+
+  // Initial Load
+  updateAll();
+
+  // Copy to Clipboard logic
+  function copyCode(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      const label = btn.querySelector('span');
+      const originalText = label.textContent;
+      
+      btn.classList.add('copied');
+      label.textContent = 'Copied!';
+      
+      setTimeout(function() {
+        btn.classList.remove('copied');
+        label.textContent = originalText;
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
