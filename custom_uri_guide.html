@@ -79,29 +79,37 @@
   .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
   .brand-mark { width: 26px; height: 26px; flex: none; }
   
-  .hero { padding: 50px 0 40px; }
+  .hero { padding: 50px 0 40px; text-align: center; }
   .hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     font-size: 13px; color: var(--text-dim);
-    margin-bottom: 18px;
+    margin: 0 auto 18px;
   }
   .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px var(--green-bg); }
-  .hero h1 { font-size: clamp(32px, 4vw, 42px); max-width: 25ch; margin-bottom: 18px; }
-  .hero p.lede { font-size: 16.5px; color: var(--text-dim); max-width: 65ch; margin-bottom: 8px; }
+  .hero h1 { font-size: clamp(32px, 4vw, 42px); max-width: 25ch; margin: 0 auto 18px; line-height: 1.15; }
+  .hero p.lede { font-size: 16.5px; color: var(--text-dim); max-width: 65ch; margin: 0 auto 24px; line-height: 1.55; text-align: justify;}
 
   /* OS Selector */
-  .os-selector-wrap { display: flex; margin-bottom: 24px; }
+  .os-selector-wrap { 
+    display: flex; 
+    margin: 0 auto 32px; 
+    max-width: 100%; 
+    justify-content: center; 
+  }
   .os-toggle {
     display: inline-flex;
     background: var(--panel-2);
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 4px;
+    padding: 5px;
     gap: 4px;
   }
   .os-seg {
-    padding: 8px 24px;
-    font-size: 14px;
+    flex: 1;
+    min-width: 140px; 
+    justify-content: center; 
+    padding: 8px 16px;
+    font-size: 14.5px;
     font-weight: 600;
     color: var(--muted);
     background: transparent;
@@ -135,6 +143,7 @@
     gap: 20px;
     flex-wrap: wrap;
     box-shadow: 0 4px 20px var(--blue-bg);
+    text-align: left;
   }
   .config-panel-title {
     width: 100%;
@@ -168,6 +177,7 @@
     margin-top: 40px;
     display: flex; align-items: stretch; gap: 0;
     flex-wrap: wrap;
+    text-align: left;
   }
   .flow-node {
     flex: 1 1 150px;
@@ -192,7 +202,7 @@
   section { padding: 56px 0; border-top: 1px solid var(--border-soft); }
   .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
   .section-head h2 { font-size: 24px; }
-  .section-sub { color: var(--text-dim); font-size: 15px; margin: -16px 0 28px; max-width: 60ch; }
+  .section-sub { color: var(--text-dim); font-size: 15px; margin: -16px 0 28px; }
 
   .steps { position: relative; }
   .step { display: grid; grid-template-columns: 44px 1fr; gap: 20px; position: relative; padding-bottom: 44px; }
@@ -219,7 +229,7 @@
     background: var(--step-bg, var(--blue-bg));
     padding: 2px 8px; border-radius: 20px; margin-bottom: 10px;
   }
-  .step-body p { color: var(--text-dim); font-size: 14.5px; max-width: 65ch; }
+  .step-body p { color: var(--text-dim); font-size: 14.5px; line-height: 1.6; }
   .step-body p.tight { margin-top: 0; }
 
   .file-panel { margin-top: 16px; background: #0D1119; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
@@ -240,7 +250,63 @@
   .fp-btn svg { width: 13px; height: 13px; flex: none; }
   .fp-btn:hover { border-color: var(--text-dim); color: var(--text); }
   .fp-btn.copied { border-color: var(--green); color: var(--green); }
-  .file-panel pre { margin: 0; padding: 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; color: #38bdf8; }
+  /* Ensure overall wrap and prevent any horizontal overflow */
+  body {
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .wrap { 
+    max-width: var(--maxw); 
+    margin: 0 auto; 
+    padding: 0 24px; 
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .step-body {
+    min-width: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .step-body p { 
+    color: var(--text-dim); 
+    font-size: 14.5px; 
+    line-height: 1.6; 
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Code block window with strict containment and standalone scrollbars */
+  .file-panel { 
+    margin-top: 16px; 
+    background: #0D1119; 
+    border: 1px solid var(--border); 
+    border-radius: 9px; 
+    overflow: hidden; 
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .file-panel pre { 
+    margin: 0; 
+    padding: 16px; 
+    overflow-x: auto; 
+    font-size: 12.5px; 
+    line-height: 1.65; 
+    color: #38bdf8; 
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .file-panel pre code {
+    white-space: pre;
+    word-break: normal;
+    word-wrap: normal;
+  }
 
   .callout {
     display: flex; gap: 12px; background: var(--callout-bg, var(--red-bg));
@@ -296,6 +362,15 @@
       Normally, clicking a link to a local or network path does nothing because of browser security blocks. 
       This guide wires up a custom protocol (like <code>openfolder:</code>) to safely bypass that block, handing the link directly to your operating system. <strong>This opens standard folders, but it also automatically launches safe files (like <code>.mp4</code> or <code>.pdf</code>) in their default apps!</strong>
     </p>
+
+    <div class="callout" style="--callout-color:var(--warn);--callout-bg:var(--gold-bg); margin: 0 auto 32px; max-width: 65ch; text-align: left;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <p><strong>Disclaimer:</strong> Modifying your operating system's registry, desktop entries, or URL handlers carries inherent risks. While the provided scripts include strict security blocklists to protect you from malicious links, you are implementing these custom system protocols entirely at your own risk.</p>
+    </div>
 
     <div class="os-selector-wrap">
       <div class="os-toggle" role="radiogroup" aria-label="Select Operating System">
