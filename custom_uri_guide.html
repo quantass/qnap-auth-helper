@@ -357,7 +357,7 @@
 
   <section class="hero" style="border-top:none;padding-top:40px;">
     <div class="hero-eyebrow"><span class="dot" id="OsStatusDot"></span> <span id="OsStatusText">Windows</span> &nbsp;·&nbsp; Firefox desktop</div>
-    <h1>Open Network & Local Paths Directly from Firefox</h1>
+    <h1>Open Network & Local Paths Directly in Firefox</h1>
     <p class="lede">
       Normally, clicking a link to a local or network path does nothing because of browser security blocks. 
       This guide wires up a custom protocol (like <code>openfolder:</code>) to safely bypass that block, handing the link directly to your operating system.
@@ -474,8 +474,8 @@
 
           <!-- LINUX STEP 1 -->
           <div class="os-specific os-linux">
-            <h3>Save the bash script</h3>
-            <p class="tight">This script extracts the path and passes it to <code>xdg-open</code>. Ensure the folder <code><span class="dyn-path">/home/user/.local/bin</span></code> exists, save the code below as <code><span class="dyn-proto">openfolder</span>.sh</code>, and <strong>make it executable</strong>.</p>
+            <h3>Save and make the bash script executable</h3>
+            <p class="tight">This script extracts the path and passes it to <code>xdg-open</code>. Ensure the folder <code><span class="dyn-path">/home/user/.local/bin</span></code> exists, save the code below as <code><span class="dyn-proto">openfolder</span>.sh</code>, and <strong>run the command below in your terminal to make it executable</strong>:</p>
             
             <div class="file-panel">
               <div class="file-panel-head">
@@ -489,6 +489,15 @@
                 </div>
               </div>
               <pre><code id="code-sh"></code></pre>
+            </div>
+
+            <p style="margin-top:14px; font-size:14.5px; color:var(--text-dim);">Run this command in your terminal to grant executable permissions:</p>
+            <div class="file-panel" style="margin-top: 6px;">
+              <div class="file-panel-head">
+                <div class="file-panel-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l6-6-6-6M12 19h8"/></svg> Make Executable</div>
+                <div class="file-panel-actions"><button class="fp-btn" onclick="copyCode('code-chmod', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button></div>
+              </div>
+              <pre><code id="code-chmod"></code></pre>
             </div>
           </div>
 
@@ -884,9 +893,7 @@ MimeType=x-scheme-handler/${proto};`;
   }
 
   function generateTerminalCmds(proto, dir) {
-    let safeDir = dir.replace(/\/+$/, '');
-    return `chmod +x ${safeDir}/${proto}.sh
-mkdir -p ~/.local/share/applications
+    return `mkdir -p ~/.local/share/applications
 mv ${proto}.desktop ~/.local/share/applications/
 xdg-mime default ${proto}.desktop x-scheme-handler/${proto}
 update-desktop-database ~/.local/share/applications`;
@@ -988,10 +995,12 @@ end open location`;
       const shCode = generateBash(proto);
       const desktopCode = generateDesktop(proto, dir);
       const terminalCode = generateTerminalCmds(proto, dir);
+      const chmodCode = "chmod +x " + dir.replace(/\/+$/, '') + "/" + proto + ".sh";
       
       document.getElementById('code-sh').textContent = shCode;
       document.getElementById('code-desktop').textContent = desktopCode;
       document.getElementById('code-terminal').textContent = terminalCode;
+      document.getElementById('code-chmod').textContent = chmodCode;
       
       document.getElementById('dl-sh').href = URL.createObjectURL(new Blob([shCode], { type: 'text/x-shellscript' }));
       document.getElementById('dl-desktop').href = URL.createObjectURL(new Blob([desktopCode], { type: 'text/plain' }));
