@@ -53,7 +53,6 @@
   }
 
   ::selection { background: rgba(56, 189, 248, 0.35); color: #fff; }
-
   a { color: inherit; }
   code, pre { font-family: var(--font-mono); }
 
@@ -90,13 +89,48 @@
   .hero h1 { font-size: clamp(32px, 4vw, 42px); max-width: 25ch; margin-bottom: 18px; }
   .hero p.lede { font-size: 16.5px; color: var(--text-dim); max-width: 65ch; margin-bottom: 8px; }
 
+  /* OS Selector */
+  .os-selector-wrap { display: flex; margin-bottom: 24px; }
+  .os-toggle {
+    display: inline-flex;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .os-seg {
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .os-seg svg { width: 20px; height: 20px; opacity: 0.6; transition: opacity 0.15s ease; }
+  .os-seg:hover { color: var(--text); }
+  .os-seg:hover svg { opacity: 0.8; }
+  .os-seg.os-seg--on { background: rgba(79,140,255,0.15); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .os-seg.os-seg--on svg { opacity: 1; }
+  .os-seg:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+  /* OS specific icon colors */
+  .os-seg.os-seg--on[data-target-os="windows"] svg path { fill: #00a4ef; }
+  .os-seg.os-seg--on[data-target-os="macos"] svg path { fill: #ffffff; }
+  html[data-theme="light"] .os-seg.os-seg--on[data-target-os="macos"] svg path { fill: #111111; }
+
   /* Configuration Panel */
   .config-panel {
     background: var(--panel-2);
     border: 1px solid var(--blue);
     border-radius: 9px;
     padding: 24px;
-    margin-top: 35px;
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
@@ -208,16 +242,6 @@
   .fp-btn.copied { border-color: var(--green); color: var(--green); }
   .file-panel pre { margin: 0; padding: 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; color: #38bdf8; }
 
-  .pref-row {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    background: #0D1119; border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px 14px; margin-top: 10px; font-family: var(--font-mono); font-size: 13px;
-  }
-  .pref-row .k { color: var(--text); }
-  .pref-row .eq { color: var(--text-faint); }
-  .pref-row .v { color: var(--green); }
-  .pref-row .tag { margin-left: auto; font-family: var(--font-body); font-size: 11px; color: var(--text-faint); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; }
-
   .callout {
     display: flex; gap: 12px; background: var(--callout-bg, var(--red-bg));
     border: 1px solid var(--callout-color, var(--red)); border-radius: 9px;
@@ -242,6 +266,12 @@
   .tshoot-item p { margin: 0; font-size: 13.5px; color: var(--text-dim); }
 
   footer { padding: 40px 0 60px; border-top: 1px solid var(--border-soft); text-align: center; color: var(--text-faint); font-size: 13px; }
+
+  /* OS-specific visibility */
+  .os-specific { display: none; }
+  .os-specific.is-visible { display: block; }
+  
+  html[data-theme="light"] .os-seg.os-seg--on { background: rgba(31,111,255,0.08); color: var(--text); }
 </style>
 </head>
 <body>
@@ -260,12 +290,33 @@
 <main class="wrap">
 
   <section class="hero" style="border-top:none;padding-top:40px;">
-    <div class="hero-eyebrow"><span class="dot"></span> Windows 11 &nbsp;·&nbsp; Firefox desktop</div>
+    <div class="hero-eyebrow"><span class="dot" id="OsStatusDot"></span> <span id="OsStatusText">Windows</span> &nbsp;·&nbsp; Firefox desktop</div>
     <h1>Directly link your files & folders in Firefox.</h1>
     <p class="lede">
       Normally, clicking a link to a local or network path does nothing because of browser security blocks. 
-      This guide wires up a custom protocol (like <code>openfolder://</code>) to safely bypass that block, handing the link directly to Windows Explorer. <strong>This opens standard folders, but it also automatically launches safe files (like <code>.mp4</code> or <code>.pdf</code>) in their default Windows apps!</strong>
+      This guide wires up a custom protocol (like <code>openfolder:</code>) to safely bypass that block, handing the link directly to your operating system. <strong>This opens standard folders, but it also automatically launches safe files (like <code>.mp4</code> or <code>.pdf</code>) in their default apps!</strong>
     </p>
+
+    <div class="os-selector-wrap">
+      <div class="os-toggle" role="radiogroup" aria-label="Select Operating System">
+        <button class="os-seg os-seg--on" data-target-os="windows" role="radio" aria-checked="true">
+          <svg viewBox="0 0 88 88" aria-hidden="true"><path fill="currentColor" d="M0 12.4L35.7 7.5V41H0V12.4zM39.3 6.9L88 0V41H39.3V6.9zM0 45H35.7V78.5L0 73.6V45zM39.3 45H88V88L39.3 81.1V45z"/></svg>
+          Windows
+        </button>
+        <button class="os-seg" data-target-os="linux" role="radio" aria-checked="false">
+          <svg viewBox="0 0 448 512" aria-hidden="true">
+            <path fill="#ffffff" d="M224 159c25.4 0 46 25.1 46 56s-20.6 56-46 56-46-25.1-46-56 20.6-56 46-56z"/>
+            <path class="tux-body" fill="currentColor" d="M224 0C100.3 0 0 100.3 0 224c0 29.8 5.8 58.3 16.5 84.7 11.4 28 27.5 53.6 47.3 75.8-19.2 16.4-42.3 27-63.8 27-3.9 0-7.8-.3-11.6-.9 28.5 40.7 75.3 67.4 127.6 67.4 20.2 0 40.1-3.8 58.7-10.8 16-6.1 31.4-14.3 45.6-24.2 14.2 9.9 29.6 18.1 45.6 24.2 18.6 7 38.5 10.8 58.7 10.8 52.3 0 99.1-26.7 127.6-67.4-3.8.6-7.7.9-11.6.9-21.5 0-44.6-10.6-63.8-27 19.8-22.2 35.9-47.8 47.3-75.8C442.2 282.3 448 253.8 448 224 448 100.3 347.7 0 224 0zm0 159c25.4 0 46 25.1 46 56s-20.6 56-46 56-46-25.1-46-56 20.6-56 46-56z"/>
+            <path class="tux-beak" fill="currentColor" d="M220.8 123.3c1.8 1 3.5 2 5.1 3 31.9 19.2 56 61.1 56 94 0 13.5-3.3 26.6-9.1 38.6 15 2.1 30.1 6.5 44.5 13.3 29.8 14.1 55.4 34.6 74.2 59.5 3.3 4.4 7.2 8.5 11.4 12.1 3.9 3.4 9 5.8 14.2 6.7 5.1.9 10.3.3 15.3-1.6 3.6-1.3 7-3.2 10.1-5.6-21.5 35.8-54.8 63.8-94.8 79.4-4 1.5-8.1 2.8-12.2 4-13.8 3.9-28.1 5.9-42.5 5.9-17 0-33.8-2.6-50-7.6-14-4.3-27.6-10-40.4-16.9-10.4-5.6-20.5-11.8-30.2-18.5-5.7-4-11.2-8.3-16.5-12.8-5.3 4.5-10.8 8.8-16.5 12.8-9.7 6.7-19.8 12.9-30.2 18.5-12.8 6.9-26.4 12.6-40.4 16.9-16.2 5-33 7.6-50 7.6-14.4 0-28.7-2-42.5-5.9-4.1-1.2-8.2-2.5-12.2-4 40-15.6 73.3-43.6 94.8-79.4 3.1 2.4 6.5 4.3 10.1 5.6 5 1.9 10.2 2.5 15.3 1.6 5.2-.9 10.3-3.3 14.2-6.7 4.2-3.6 8.1-7.7 11.4-12.1 18.8-24.9 44.4-45.4 74.2-59.5 14.4-6.8 29.5-11.2 44.5-13.3-5.8-12-9.1-25.1-9.1-38.6 0-32.9 24.1-74.8 56-94 1.6-1 3.3-2 5.1-3z"/>
+          </svg>
+          Linux
+        </button>
+        <button class="os-seg" data-target-os="macos" role="radio" aria-checked="false">
+          <svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.7-119.3-65.2-30.7-61.7-90-61.8-91.3zM240 65.3C252.6 47 264.4 19.3 261.2 0c-21.5 1.5-54 13.9-69.5 31.5-13.8 15.6-26.4 44.3-22.5 62.4 23.5 2 51.5-11.8 70.8-28.6z"/></svg>
+          macOS
+        </button>
+      </div>
+    </div>
 
     <!-- Interactive Configuration Panel -->
     <div class="config-panel">
@@ -278,7 +329,7 @@
         <input type="text" id="inp-proto" value="openfolder">
         <div class="config-info">e.g., <code>openfolder</code>, <code>myfiles</code>, <code>browse</code></div>
       </div>
-      <div class="config-item">
+      <div class="config-item" id="PathConfigItem">
         <label for="inp-path">Script Save Location</label>
         <input type="text" id="inp-path" value="C:\Scripts">
         <div class="config-info">The folder where you will save the script below.</div>
@@ -295,8 +346,8 @@
       <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg></div>
       <div class="flow-node" style="--node-color:var(--gold)">
         <svg class="fn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
-        <div class="fn-label">2. Registry</div>
-        <div class="fn-text">Windows recognizes the name and points to your script.</div>
+        <div class="fn-label">2. OS Config</div>
+        <div class="fn-text"><span class="dyn-os">Windows</span> recognizes the name and points to your script.</div>
       </div>
       <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg></div>
       <div class="flow-node" style="--node-color:var(--cyan)">
@@ -307,7 +358,7 @@
       <div class="flow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h14M13 6l6 6-6 6"/></svg></div>
       <div class="flow-node" style="--node-color:var(--green)">
         <svg class="fn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z"/></svg>
-        <div class="fn-label">4. Explorer</div>
+        <div class="fn-label">4. System</div>
         <div class="fn-text">The file or folder instantly opens on your screen.</div>
       </div>
     </div>
@@ -318,75 +369,177 @@
     <p class="section-sub" style="margin-top:-20px;">The code blocks and downloads below update automatically based on your choices in the configuration panel above!</p>
 
     <div class="steps">
-      <!-- Step 1 -->
+      <!-- ============================== -->
+      <!-- STEP 1: SCRIPT                 -->
+      <!-- ============================== -->
       <div class="step">
         <div class="step-rail"><div class="step-num" style="--step-color:var(--cyan)">1</div></div>
         <div class="step-body">
           <span class="step-tag" style="--step-color:var(--cyan);--step-bg:var(--cyan-bg)">Script</span>
-          <h3>Save the helper script</h3>
-          <p class="tight">This script receives the link from Firefox, cleans up the text, and safely passes it to Windows. Ensure the folder <code><span class="dyn-path">C:\Scripts</span></code> exists on your computer, and save the code below as <code><span class="dyn-proto">openfolder</span>.vbs</code>.</p>
-
-          <div class="file-panel">
-            <div class="file-panel-head">
-              <div class="file-panel-name">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9l3 3-3 3M13 15h3"/></svg>
-                <span id="filename-vbs">openfolder.vbs</span>
+          
+          <!-- WINDOWS STEP 1 -->
+          <div class="os-specific os-windows is-visible">
+            <h3>Save the helper script</h3>
+            <p class="tight">This script receives the link from Firefox, cleans up the text, and safely passes it to Windows. Ensure the folder <code><span class="dyn-path">C:\Scripts</span></code> exists on your computer, and save the code below as <code><span class="dyn-proto">openfolder</span>.vbs</code>.</p>
+            
+            <div class="file-panel">
+              <div class="file-panel-head">
+                <div class="file-panel-name">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9l3 3-3 3M13 15h3"/></svg>
+                  <span id="filename-vbs">openfolder.vbs</span>
+                </div>
+                <div class="file-panel-actions">
+                  <button class="fp-btn" onclick="copyCode('code-vbs', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button>
+                  <a class="fp-btn" id="dl-vbs" download="openfolder.vbs" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg><span>Download</span></a>
+                </div>
               </div>
-              <div class="file-panel-actions">
-                <button class="fp-btn" onclick="copyCode('code-vbs', this)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg>
-                  <span>Copy</span>
-                </button>
-                <a class="fp-btn" id="dl-vbs" download="openfolder.vbs" href="#">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg>
-                  <span>Download</span>
-                </a>
-              </div>
+              <pre><code id="code-vbs"></code></pre>
             </div>
-            <pre><code id="code-vbs"></code></pre>
+          </div>
+
+          <!-- LINUX STEP 1 -->
+          <div class="os-specific os-linux">
+            <h3>Save the bash script</h3>
+            <p class="tight">This script extracts the path and passes it to <code>xdg-open</code>. Ensure the folder <code><span class="dyn-path">/home/user/.local/bin</span></code> exists, save the code below as <code><span class="dyn-proto">openfolder</span>.sh</code>, and <strong>make it executable</strong>.</p>
+            
+            <div class="file-panel">
+              <div class="file-panel-head">
+                <div class="file-panel-name">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9l3 3-3 3M13 15h3"/></svg>
+                  <span id="filename-sh">openfolder.sh</span>
+                </div>
+                <div class="file-panel-actions">
+                  <button class="fp-btn" onclick="copyCode('code-sh', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button>
+                  <a class="fp-btn" id="dl-sh" download="openfolder.sh" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg><span>Download</span></a>
+                </div>
+              </div>
+              <pre><code id="code-sh"></code></pre>
+            </div>
+          </div>
+
+          <!-- MACOS STEP 1 -->
+          <div class="os-specific os-macos">
+            <h3>Create an AppleScript Application</h3>
+            <p class="tight">macOS requires custom protocols to be handled by application bundles. We will use the built-in Script Editor to create one.</p>
+            <ol style="font-size:14.5px; color:var(--text-dim); padding-left:20px; line-height: 1.7; margin-bottom: 0;">
+              <li>Open <strong>Script Editor</strong> (found in <code>Applications &gt; Utilities</code>).</li>
+              <li>Paste the AppleScript code below into the editor.</li>
+              <li>Go to <strong>File &gt; Save</strong>.</li>
+              <li>Name it <code><span class="dyn-proto">openfolder</span></code>, choose <strong>Application</strong> as the File Format, and save it to your <code>Applications</code> folder.</li>
+            </ol>
+            
+            <div class="file-panel">
+              <div class="file-panel-head">
+                <div class="file-panel-name">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9l3 3-3 3M13 15h3"/></svg>
+                  AppleScript
+                </div>
+                <div class="file-panel-actions">
+                  <button class="fp-btn" onclick="copyCode('code-applescript', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button>
+                </div>
+              </div>
+              <pre><code id="code-applescript"></code></pre>
+            </div>
           </div>
           
           <div class="callout" style="--callout-color:var(--red);--callout-bg:var(--red-bg)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 20h20L12 2Z"/><path d="M12 9v5M12 17h.01"/></svg>
-            <p><strong>Security Warning:</strong> Do not remove the blocklist in the code! Because the script passes the path to Windows, malicious links could trick your computer into silently running an <code>.exe</code> or <code>.bat</code> file instead of just opening a folder or video. The blocklist protects you.</p>
+            <p><strong>Security Warning:</strong> Do not remove the blocklist in the code! Because the script passes the path to the OS, malicious links could trick your computer into silently running executable files instead of just opening a folder or video. The blocklist protects you.</p>
           </div>
         </div>
       </div>
 
-      <!-- Step 2 -->
+      <!-- ============================== -->
+      <!-- STEP 2: OS REGISTRATION        -->
+      <!-- ============================== -->
       <div class="step">
         <div class="step-rail"><div class="step-num" style="--step-color:var(--gold)">2</div></div>
         <div class="step-body">
-          <span class="step-tag" style="--step-color:var(--gold);--step-bg:var(--gold-bg)">Registry</span>
-          <h3>Tell Windows about your protocol</h3>
-          <p class="tight">Windows needs to know what to do when it sees your custom protocol link. Create a text file named <code><span class="dyn-proto">openfolder</span>.reg</code>, paste the code below into it, and <strong>double-click the file to merge it into Windows</strong>.</p>
+          <span class="step-tag" style="--step-color:var(--gold);--step-bg:var(--gold-bg)">OS Config</span>
+          
+          <!-- WINDOWS STEP 2 -->
+          <div class="os-specific os-windows is-visible">
+            <h3>Tell Windows about your protocol</h3>
+            <p class="tight">Windows needs to know what to do when it sees your custom protocol link. Create a text file named <code><span class="dyn-proto">openfolder</span>.reg</code>, paste the code below into it, and <strong>double-click the file to merge it into Windows</strong>.</p>
 
-          <div class="file-panel">
-            <div class="file-panel-head">
-              <div class="file-panel-name">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
-                <span id="filename-reg">openfolder.reg</span>
+            <div class="file-panel">
+              <div class="file-panel-head">
+                <div class="file-panel-name">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
+                  <span id="filename-reg">openfolder.reg</span>
+                </div>
+                <div class="file-panel-actions">
+                  <button class="fp-btn" onclick="copyCode('code-reg', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button>
+                  <a class="fp-btn" id="dl-reg" download="openfolder.reg" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg><span>Download</span></a>
+                </div>
               </div>
-              <div class="file-panel-actions">
-                <button class="fp-btn" onclick="copyCode('code-reg', this)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg>
-                  <span>Copy</span>
-                </button>
-                <a class="fp-btn" id="dl-reg" download="openfolder.reg" href="#">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg>
-                  <span>Download</span>
-                </a>
-              </div>
+              <pre><code id="code-reg"></code></pre>
             </div>
-            <pre><code id="code-reg"></code></pre>
+            <p style="margin-top:14px; font-size:13.5px;">
+              <strong>Note:</strong> We are using <code>HKEY_CURRENT_USER</code> here, which means you <strong>do not</strong> need Administrator rights to run this file! It will apply to your Windows account instantly.
+            </p>
           </div>
-          <p style="margin-top:14px; font-size:13.5px;">
-            <strong>Note:</strong> We are using <code>HKEY_CURRENT_USER</code> here, which means you <strong>do not</strong> need Administrator rights to run this file! It will apply to your Windows account instantly.
-          </p>
+
+          <!-- LINUX STEP 2 -->
+          <div class="os-specific os-linux">
+            <h3>Register the handler via Desktop Entry</h3>
+            <p class="tight">Linux uses desktop entries to register MIME types and URI schemes. Create a file named <code><span class="dyn-proto">openfolder</span>.desktop</code> and run the terminal commands below to register it.</p>
+
+            <div class="file-panel">
+              <div class="file-panel-head">
+                <div class="file-panel-name">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
+                  <span id="filename-desktop">openfolder.desktop</span>
+                </div>
+                <div class="file-panel-actions">
+                  <button class="fp-btn" onclick="copyCode('code-desktop', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button>
+                  <a class="fp-btn" id="dl-desktop" download="openfolder.desktop" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 19h14"/></svg><span>Download</span></a>
+                </div>
+              </div>
+              <pre><code id="code-desktop"></code></pre>
+            </div>
+
+            <p style="margin-top:14px; font-size:14.5px; color:var(--text-dim);">Run these commands in your terminal to apply the changes:</p>
+            <div class="file-panel" style="margin-top: 6px;">
+              <div class="file-panel-head">
+                <div class="file-panel-name"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l6-6-6-6M12 19h8"/></svg> Terminal Commands</div>
+                <div class="file-panel-actions"><button class="fp-btn" onclick="copyCode('code-terminal', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button></div>
+              </div>
+              <pre><code id="code-terminal"></code></pre>
+            </div>
+          </div>
+
+          <!-- MACOS STEP 2 -->
+          <div class="os-specific os-macos">
+            <h3>Register the URL Scheme</h3>
+            <p class="tight">You must edit the application's <code>Info.plist</code> file so macOS knows it handles your custom protocol.</p>
+            <ol style="font-size:14.5px; color:var(--text-dim); padding-left:20px; line-height: 1.7; margin-bottom: 0;">
+              <li>Go to your Applications folder and <strong>Right-Click</strong> the <code><span class="dyn-proto">openfolder</span></code> app you just created.</li>
+              <li>Select <strong>Show Package Contents</strong>.</li>
+              <li>Open the <code>Contents</code> folder and open <code>Info.plist</code> in TextEdit.</li>
+              <li>Paste the XML snippet below just above the final <code>&lt;/dict&gt;</code> and <code>&lt;/plist&gt;</code> tags at the bottom.</li>
+              <li>Save the file. <strong>Double-click your app once</strong> to run it so macOS registers the new URL scheme natively.</li>
+            </ol>
+            
+            <div class="file-panel">
+              <div class="file-panel-head">
+                <div class="file-panel-name">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v6H6zM6 15h12v6H6zM6 9v6M18 9v6"/></svg>
+                  Info.plist Snippet
+                </div>
+                <div class="file-panel-actions">
+                  <button class="fp-btn" onclick="copyCode('code-plist', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></svg><span>Copy</span></button>
+                </div>
+              </div>
+              <pre><code id="code-plist"></code></pre>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Step 3 (Swapped with old Step 4) -->
+      <!-- ============================== -->
+      <!-- STEP 3: TEST (ALL OS)          -->
+      <!-- ============================== -->
       <div class="step">
         <div class="step-rail"><div class="step-num" style="--step-color:var(--green)">3</div></div>
         <div class="step-body">
@@ -394,20 +547,24 @@
           <h3>Try it out</h3>
           <p class="tight">Paste this into the address bar (or click it if it's a hyperlink on a web page):</p>
 
-          <div class="test-link"><span class="dyn-proto">openfolder</span>:\\192.168.1.2\Downloads</div>
+          <div class="test-link os-specific os-windows is-visible"><span class="dyn-proto">openfolder</span>:C:\Users\Name\Downloads</div>
+          <div class="test-link os-specific os-linux"><span class="dyn-proto">openfolder</span>:/home/user/Downloads</div>
+          <div class="test-link os-specific os-macos"><span class="dyn-proto">openfolder</span>:/Users/username/Downloads</div>
 
           <p style="margin-top:14px; font-size:13.5px;">
-            Firefox will show a one-time "Launch Application" prompt. Check <strong>Always allow</strong> or <strong>Remember my choice</strong> and confirm. File Explorer should immediately pop open to that folder!
+            Firefox will show a one-time "Launch Application" prompt. Check <strong>Always allow</strong> or <strong>Remember my choice</strong> and confirm. Your OS should immediately pop open that folder!
           </p>
 
           <div class="callout" style="--callout-color:var(--blue);--callout-bg:var(--blue-bg)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <p><strong>Restart Not Required:</strong> Windows registers protocols instantly. You usually do not need to restart Firefox, but if the browser acts stubborn on the first try, a quick browser restart will fix it.</p>
+            <p><strong>URL Syntax &amp; Slashes:</strong> The protocol only requires the trailing colon (e.g., <code><span class="dyn-proto">openfolder</span>:</code>). The slashes that follow simply belong to the standard file path structure of your operating system (e.g., <code>C:\</code> vs <code>/home/</code>). You do not need to add double forward slashes (<code>//</code>) like a website.</p>
           </div>
         </div>
       </div>
 
-      <!-- Step 4 (Swapped with old Step 3) -->
+      <!-- ============================== -->
+      <!-- STEP 4: ABOUT:CONFIG (OPTIONAL)-->
+      <!-- ============================== -->
       <div class="step">
         <div class="step-rail"><div class="step-num" style="--step-color:var(--text-faint)">4</div></div>
         <div class="step-body">
@@ -435,7 +592,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
         <div>
           <h4>Nothing happens when I click the link</h4>
-          <p>Check the <code><span class="dyn-proto">openfolder</span>.reg</code> file you ran in Step 2. The script path inside the registry file MUST match the exact folder where you saved the VBS script in Step 1 (currently set to <code><span class="dyn-path">C:\Scripts</span></code>). Don't forget the double slashes <code>\\</code> in the `.reg` code!</p>
+          <p>
+            <span class="os-specific os-windows is-visible">Check the <code><span class="dyn-proto">openfolder</span>.reg</code> file you ran in Step 2. The script path inside the registry file MUST match the exact folder where you saved the VBS script in Step 1 (currently set to <code><span class="dyn-path">C:\Scripts</span></code>). Don't forget the double slashes <code>\\</code> in the `.reg` code!</span>
+            <span class="os-specific os-linux">Ensure you actually ran <code>chmod +x</code> on your bash script, and that the path inside the <code>Exec=</code> line of your <code>.desktop</code> file perfectly matches where you saved the script.</span>
+            <span class="os-specific os-macos">Ensure you double-clicked the AppleScript Application at least once. macOS will not register the URL scheme inside the <code>Info.plist</code> file until LaunchServices sees the app run for the first time.</span>
+          </p>
         </div>
       </div>
       <div class="tshoot-item">
@@ -448,24 +609,26 @@
       <div class="tshoot-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
         <div>
-          <h4>File Explorer opens to "My Documents" instead of the target</h4>
-          <p>This means Windows Explorer couldn't find the exact network or folder path you clicked. Our VBScript automatically creates a log file! Go to <code><span class="dyn-path">C:\Scripts</span></code> and open <code>launch_<span class="dyn-proto">openfolder</span>.log</code> to see the exact text path Windows tried to open. This usually reveals a typo in your link.</p>
+          <h4>The OS opens "My Documents" or "Home" instead of the target</h4>
+          <p>This means the operating system couldn't find the exact network or folder path you clicked. <span class="os-specific os-windows is-visible">Our VBScript automatically creates a log file! Go to <code><span class="dyn-path">C:\Scripts</span></code> and open <code>launch_<span class="dyn-proto">openfolder</span>.log</code> to see the exact text path Windows tried to open. This usually reveals a typo in your link.</span><span class="os-specific os-linux">Check for typos in your path. Try manually opening it in your file manager to confirm it exists.</span><span class="os-specific os-macos">Check for typos in your path. Try manually opening it in Finder to confirm it exists.</span></p>
         </div>
       </div>
     </div>
   </section>
 
   <footer>
-    <p>Built for Windows 11 &amp; Firefox Desktop. (Uses Windows Explorer.exe, so this is for PC only).</p>
+    <p>Custom Protocol Setup Guide &bull; OS Agnostic &amp; Secure.</p>
   </footer>
 
 </main>
 
 <script>
-  // Dynamic Generation Functions
+  let currentOS = "windows";
+
+  // Dynamic Generation Functions - WINDOWS
   function generateVBS(proto) {
     return `' ==============================================================================
-' ${proto} Protocol Handler Script
+' ${proto} Protocol Handler Script (Windows)
 ' Receives a URL like ${proto}:\\\\server\\share\\folder or ${proto}:C:\\path\\to\\file.mp4
 ' and safely opens it in Windows File Explorer or its default Windows application.
 ' ==============================================================================
@@ -566,7 +729,6 @@ End Select
 ' ------------------------------------------------------------------------------
 ' 5. Explorer Handoff
 ' Passes the clean, verified path directly to Windows Explorer.
-' Folders will open; files will launch in their default registered Windows app.
 ' ------------------------------------------------------------------------------
 Set shell = CreateObject("WScript.Shell")
 On Error Resume Next
@@ -581,7 +743,6 @@ On Error GoTo 0`;
   }
 
   function generateReg(proto, dir) {
-    // Sanitize directory for Windows Registry (strip trailing slashes, ensure double slashes)
     let safeDir = dir.replace(/\\+$/, '');
     let doubleSlashDir = safeDir.replace(/\\/g, '\\\\');
     let fullDoubleSlashPath = doubleSlashDir + '\\\\' + proto + '.vbs';
@@ -598,49 +759,210 @@ On Error GoTo 0`;
 @="wscript.exe \\"${fullDoubleSlashPath}\\" \\"%1\\""`;
   }
 
+  // Dynamic Generation Functions - LINUX
+  function generateBash(proto) {
+    return `#!/bin/bash
+# ==============================================================================
+# ${proto} Protocol Handler Script (Linux)
+# Receives a URL like ${proto}:/path/to/folder or ${proto}://server/share/file.mp4
+# ==============================================================================
+
+# 1. Strip the protocol prefix
+RAW_PATH="\${1#*:}"
+
+# Strip leading // if present, preserving the actual root slash
+RAW_PATH="\${RAW_PATH#//}"
+
+# 2. URL Decode using Python3 (standard on almost all Linux distributions)
+DECODED_PATH=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))" "$RAW_PATH")
+
+# Strip surrounding quotes if the browser appended them
+DECODED_PATH="\${DECODED_PATH%\\\"}"
+DECODED_PATH="\${DECODED_PATH#\\\"}"
+DECODED_PATH="\${DECODED_PATH%\\\'}"
+DECODED_PATH="\${DECODED_PATH#\\\'}"
+
+# 3. Security Blocklist (CRITICAL)
+# Extract extension and convert to lowercase
+EXT="\${DECODED_PATH##*.}"
+EXT=$(echo "$EXT" | tr '[:upper:]' '[:lower:]')
+
+BLOCKED=" sh bash py pl rb php bin run appimage deb rpm "
+
+if [[ "$BLOCKED" == *" $EXT "* ]]; then
+    notify-send "Download Intercepted" "Execution blocked for dangerous extension: .$EXT" -i dialog-warning
+    exit 1
+fi
+
+# 4. OS Handoff
+xdg-open "$DECODED_PATH"`;
+  }
+
+  function generateDesktop(proto, dir) {
+    let safeDir = dir.replace(/\/+$/, '');
+    return `[Desktop Entry]
+Name=Custom Protocol (${proto})
+Exec=${safeDir}/${proto}.sh %u
+Type=Application
+Terminal=false
+MimeType=x-scheme-handler/${proto};`;
+  }
+
+  function generateTerminalCmds(proto, dir) {
+    let safeDir = dir.replace(/\/+$/, '');
+    return `chmod +x ${safeDir}/${proto}.sh
+mkdir -p ~/.local/share/applications
+mv ${proto}.desktop ~/.local/share/applications/
+xdg-mime default ${proto}.desktop x-scheme-handler/${proto}
+update-desktop-database ~/.local/share/applications`;
+  }
+
+  // Dynamic Generation Functions - MACOS
+  function generateAppleScript(proto) {
+    return `on open location this_url
+    -- 1. Extract the path (remove protocol:)
+    set tid to AppleScript's text item delimiters
+    set AppleScript's text item delimiters to ":"
+    set rawPath to (text items 2 through -1 of this_url) as string
+    set AppleScript's text item delimiters to tid
+    
+    if rawPath starts with "//" then
+        set rawPath to text 3 through -1 of rawPath
+    end if
+    
+    -- 2. Decode URL using Python3 (included in macOS)
+    set pyScript to "import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))"
+    set decodedPath to do shell script "python3 -c " & quoted form of pyScript & " " & quoted form of rawPath
+    
+    -- Strip surrounding quotes if present
+    set decodedPath to do shell script "echo " & quoted form of decodedPath & " | sed -e 's/^\"//' -e 's/\"$//' -e \"s/^'//\" -e \"s/'$//\""
+    
+    -- 3. Security Blocklist (CRITICAL)
+    set ext to ""
+    if decodedPath contains "." then
+        set ext to do shell script "echo " & quoted form of decodedPath & " | awk -F. '{print $NF}' | tr '[:upper:]' '[:lower:]'"
+    end if
+    
+    set blocked to {"app", "command", "sh", "scpt", "pkg", "dmg", "bash", "py"}
+    if ext is in blocked then
+        display alert "Security Block" message "Execution prevented for dangerous extension: ." & ext
+        return
+    end if
+    
+    -- 4. Open in Finder/Default App
+    try
+        do shell script "open " & quoted form of decodedPath
+    on error errMsg
+        display alert "Error opening path" message errMsg
+    end try
+end open location`;
+  }
+
+  function generatePlistSnippet(proto) {
+    return `    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>Custom Protocol</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>${proto}</string>
+            </array>
+        </dict>
+    </array>`;
+  }
+
   // Event Listeners for Config Panel
   const inpProto = document.getElementById('inp-proto');
   const inpPath = document.getElementById('inp-path');
-
-  function sanitizeInput(str, fallback) {
-    let clean = str.trim().replace(/[^a-zA-Z0-9_\-\:\\]/g, '');
-    return clean.length > 0 ? clean : fallback;
-  }
+  const pathConfigItem = document.getElementById('PathConfigItem');
 
   function updateAll() {
-    // Sanitize to prevent HTML breaks or weird registry bugs
     const protoRaw = inpProto.value.trim().replace(/[^a-zA-Z0-9_]/g, '');
     const proto = protoRaw.length > 0 ? protoRaw : 'openfolder';
     
     let dir = inpPath.value.trim();
-    if(dir.length === 0) dir = 'C:\\Scripts';
-    // Clean trailing slash for UI display consistency
-    const displayDir = dir.replace(/\\+$/, '');
-
-    // 1. Update Inline Text Spans
-    document.querySelectorAll('.dyn-proto').forEach(el => el.textContent = proto);
-    document.querySelectorAll('.dyn-path').forEach(el => el.textContent = displayDir);
-
-    // 2. Update Filenames
-    document.getElementById('filename-vbs').textContent = proto + '.vbs';
-    document.getElementById('filename-reg').textContent = proto + '.reg';
-    document.getElementById('dl-vbs').setAttribute('download', proto + '.vbs');
-    document.getElementById('dl-reg').setAttribute('download', proto + '.reg');
-
-    // 3. Generate Code Blocks
-    const vbsCode = generateVBS(proto);
-    const regCode = generateReg(proto, displayDir);
+    if(dir.length === 0) {
+      dir = currentOS === "windows" ? 'C:\\Scripts' : '/home/user/.local/bin';
+    }
     
-    document.getElementById('code-vbs').textContent = vbsCode;
-    document.getElementById('code-reg').textContent = regCode;
+    // Update Inline Text Spans
+    document.querySelectorAll('.dyn-proto').forEach(el => el.textContent = proto);
+    document.querySelectorAll('.dyn-path').forEach(el => el.textContent = dir);
 
-    // 4. Update Download Blobs dynamically
-    const vbsBlob = new Blob([vbsCode], { type: 'text/vbscript' });
-    document.getElementById('dl-vbs').href = URL.createObjectURL(vbsBlob);
-
-    const regBlob = new Blob([regCode], { type: 'text/plain' });
-    document.getElementById('dl-reg').href = URL.createObjectURL(regBlob);
+    if (currentOS === "windows") {
+      document.getElementById('filename-vbs').textContent = proto + '.vbs';
+      document.getElementById('filename-reg').textContent = proto + '.reg';
+      document.getElementById('dl-vbs').setAttribute('download', proto + '.vbs');
+      document.getElementById('dl-reg').setAttribute('download', proto + '.reg');
+      
+      const vbsCode = generateVBS(proto);
+      const regCode = generateReg(proto, dir);
+      document.getElementById('code-vbs').textContent = vbsCode;
+      document.getElementById('code-reg').textContent = regCode;
+      
+      document.getElementById('dl-vbs').href = URL.createObjectURL(new Blob([vbsCode], { type: 'text/vbscript' }));
+      document.getElementById('dl-reg').href = URL.createObjectURL(new Blob([regCode], { type: 'text/plain' }));
+    } 
+    else if (currentOS === "linux") {
+      document.getElementById('filename-sh').textContent = proto + '.sh';
+      document.getElementById('filename-desktop').textContent = proto + '.desktop';
+      document.getElementById('dl-sh').setAttribute('download', proto + '.sh');
+      document.getElementById('dl-desktop').setAttribute('download', proto + '.desktop');
+      
+      const shCode = generateBash(proto);
+      const desktopCode = generateDesktop(proto, dir);
+      const terminalCode = generateTerminalCmds(proto, dir);
+      
+      document.getElementById('code-sh').textContent = shCode;
+      document.getElementById('code-desktop').textContent = desktopCode;
+      document.getElementById('code-terminal').textContent = terminalCode;
+      
+      document.getElementById('dl-sh').href = URL.createObjectURL(new Blob([shCode], { type: 'text/x-shellscript' }));
+      document.getElementById('dl-desktop').href = URL.createObjectURL(new Blob([desktopCode], { type: 'text/plain' }));
+    }
+    else if (currentOS === "macos") {
+      document.getElementById('code-applescript').textContent = generateAppleScript(proto);
+      document.getElementById('code-plist').textContent = generatePlistSnippet(proto);
+    }
   }
+
+  // OS Selector Logic
+  const osButtons = document.querySelectorAll('.os-seg');
+  osButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      osButtons.forEach(b => {
+        b.classList.remove('os-seg--on');
+        b.setAttribute('aria-checked', 'false');
+      });
+      btn.classList.add('os-seg--on');
+      btn.setAttribute('aria-checked', 'true');
+      
+      currentOS = btn.getAttribute('data-target-os');
+      
+      // Update UI displays
+      document.querySelectorAll('.os-specific').forEach(el => el.classList.remove('is-visible'));
+      document.querySelectorAll('.os-' + currentOS).forEach(el => el.classList.add('is-visible'));
+      
+      // Update Hero text
+      let osText = currentOS === "windows" ? "Windows" : (currentOS === "macos" ? "macOS" : "Linux");
+      document.getElementById('OsStatusText').textContent = osText;
+      document.querySelectorAll('.dyn-os').forEach(el => el.textContent = osText);
+      
+      // Toggle Path input visibility (macOS doesn't need it because it's bundled)
+      if (currentOS === "macos") {
+        pathConfigItem.style.display = "none";
+      } else {
+        pathConfigItem.style.display = "block";
+        // Reset defaults nicely when switching platforms if user hasn't typed a custom one
+        if (inpPath.value === "C:\\Scripts" || inpPath.value === "/home/user/.local/bin") {
+          inpPath.value = currentOS === "windows" ? "C:\\Scripts" : "/home/user/.local/bin";
+        }
+      }
+      
+      updateAll();
+    });
+  });
 
   // Bind input events for live updates
   inpProto.addEventListener('input', updateAll);
@@ -655,10 +977,8 @@ On Error GoTo 0`;
     navigator.clipboard.writeText(text).then(function() {
       const label = btn.querySelector('span');
       const originalText = label.textContent;
-      
       btn.classList.add('copied');
       label.textContent = 'Copied!';
-      
       setTimeout(function() {
         btn.classList.remove('copied');
         label.textContent = originalText;
